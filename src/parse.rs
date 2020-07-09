@@ -12,7 +12,6 @@ use {
     },
     chrono::{
         offset::Utc,
-        Timelike,
         NaiveDate,
         Duration,
     },
@@ -105,7 +104,6 @@ fn get_wd_period_place(info: &str) -> Vec<(u32, u8, String)> {
         .map(|line| line.split("tiết").collect::<Vec<&str>>())
         .map(|vec| (vec[0], vec[1]))
         .map(|(f, s)| (f.trim(), s.trim()))
-        .map(|(f, s)| {println!("{}", f); (f, s)})
         .map(|(f, s)| (f.parse::<u32>().unwrap_or(2), s))
         .map(|(w, s)| (w, s.split("tại").collect::<Vec<&str>>()))
         .map(|(w, vec)| (w, vec.get(0).unwrap().clone(), vec.get(1).unwrap_or(&"N/A").clone()))

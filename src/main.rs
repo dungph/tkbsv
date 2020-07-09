@@ -5,7 +5,17 @@ use {
     chrono::{offset::Utc, DateTime, NaiveDate, FixedOffset, Datelike},
     parse::parse,
     export::to_ics,
-    std::{env, fs, io, time},
+    std::{
+        str::FromStr,
+        io::Error,
+        io::ErrorKind,
+    },
+    tide::{
+        http::Mime,
+        Request,
+        Response,
+        StatusCode,
+    },
 };
 
 #[derive(Debug, Clone)]
@@ -84,6 +94,36 @@ impl Lesson {
     }
 }
 
-fn main() {
+#[async_std::main]
+async fn main() -> Result<(), std::io::Error> {
+    let mut app = tide::new();
+    app.at("/").get(|_| async {
+        let mut res = Response::new(StatusCode::Accepted);
+        res.set_content_type(tide::http::mime::HTML);
+        res.set_body(include_str!("index.html"));
+        Ok(res) 
+    });
+    app.at("/tkb.ics").post(|mut req: Request<()>| async move {
+        let input = remove_headers(req.body_bytes().await?);
+        let lessons = parse(input).map_err(|e| Error::new(ErrorKind::InvalidData, e))?; 
+        let mut res = Response::new(StatusCode::Accepted);
+        res.set_content_type(Mime::from_str("text/calendar").unwrap());
+        res.set_body(to_ics(lessons));
+        Ok(res) 
+    });
+    app.listen("0.0.0.0:8080").await?;
+    Ok(())
+
 }
 
+
+fn remove_headers(data: Vec<u8>) -> Vec<u8> {
+    let mut start = 0;  
+    for i in 0..data.len() {
+        if data[i] == 13 && data[i+1]  == 10 && data[i+2] == 13 && data[i+3] == 10{
+            start = i + 4; 
+            break;
+        }
+    }
+    data[start..].to_vec()
+}

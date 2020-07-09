@@ -15,7 +15,7 @@ use {
 
 
 
-pub fn to_ics(lessons: Vec<Lesson>) {
+pub fn to_ics(lessons: Vec<Lesson>) -> Vec<u8>{
     let events = lessons
         .iter()
         .map(|lesson| {
@@ -31,7 +31,6 @@ pub fn to_ics(lessons: Vec<Lesson>) {
     cal.name("TKBSV");
     cal.extend(events);
    
-    let buf = format!("{}", cal);
+    format!("{}", cal).into_bytes()
     
-    fs::File::create("tkb.ics").unwrap().write_all(buf.as_bytes()); 
 }
