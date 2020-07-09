@@ -97,6 +97,7 @@ impl Lesson {
 
 #[async_std::main]
 async fn main() -> Result<(), std::io::Error> {
+
     let mut app = tide::new();
     app.at("/").get(|_| async {
         let mut res = Response::new(StatusCode::Accepted);
