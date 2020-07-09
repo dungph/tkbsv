@@ -2,13 +2,14 @@ mod parse;
 mod export;
 
 use {
-    chrono::{offset::Utc, DateTime, NaiveDate, FixedOffset, Datelike},
+    chrono::{offset::Utc, DateTime, NaiveDate, FixedOffset},
     parse::parse,
     export::to_ics,
     std::{
         str::FromStr,
         io::Error,
         io::ErrorKind,
+        env,
     },
     tide::{
         http::Mime,
@@ -111,7 +112,8 @@ async fn main() -> Result<(), std::io::Error> {
         res.set_body(to_ics(lessons));
         Ok(res) 
     });
-    app.listen("0.0.0.0:8080").await?;
+    let port = env::var("PORT").unwrap_or_else(|_| "8080".to_string());
+    app.listen(format!("0.0.0.0:{}", port)).await?;
     Ok(())
 
 }

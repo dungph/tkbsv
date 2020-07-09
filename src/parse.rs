@@ -8,10 +8,8 @@ use {
     calamine::{
         Reader,
         Xls,
-        DataType
     },
     chrono::{
-        offset::Utc,
         NaiveDate,
         Duration,
     },
