@@ -1,27 +1,17 @@
-mod parse;
 mod export;
+mod parse;
 
 use {
-    chrono::{offset::Utc, DateTime, NaiveDate, FixedOffset},
-    parse::parse,
+    chrono::{offset::Utc, DateTime, FixedOffset, NaiveDate},
     export::to_ics,
-    std::{
-        str::FromStr,
-        io::Error,
-        io::ErrorKind,
-        env,
-    },
-    tide::{
-        http::Mime,
-        Request,
-        Response,
-        StatusCode,
-    },
+    parse::parse,
+    std::{env, io::Error, io::ErrorKind, str::FromStr},
+    tide::{http::Mime, Request, Response, StatusCode},
 };
 
 #[derive(Debug, Clone)]
 pub struct Lesson {
-    date: NaiveDate, 
+    date: NaiveDate,
     period: u8,
     place: String,
     class: String,
@@ -38,7 +28,7 @@ impl Lesson {
     }
 
     fn get_time(&self) -> (u32, u32, u32, u32) {
-        match self.period{
+        match self.period {
             1 => (7, 0, 7, 45),
             2 => (7, 50, 8, 35),
             3 => (8, 40, 9, 25),
@@ -60,7 +50,7 @@ impl Lesson {
     }
 
     fn offset() -> FixedOffset {
-        FixedOffset::east(7*3600)
+        FixedOffset::east(7 * 3600)
     }
 
     pub fn mod_period(&mut self, p: u8) {
@@ -80,10 +70,9 @@ impl Lesson {
         let (h, m, _, _) = self.get_time();
         let dt = self.date.and_hms(h, m, 0);
         DateTime::from_utc(dt - Lesson::offset(), Utc)
-        
     }
     pub fn end(&self) -> DateTime<Utc> {
-        let (_, _, h, m) = self.get_time(); 
+        let (_, _, h, m) = self.get_time();
         let dt = self.date.and_hms(h, m, 0);
         DateTime::from_utc(dt - Lesson::offset(), Utc)
     }
@@ -97,34 +86,31 @@ impl Lesson {
 
 #[async_std::main]
 async fn main() -> Result<(), std::io::Error> {
-
     let mut app = tide::new();
     app.at("/").get(|_| async {
         let mut res = Response::new(StatusCode::Accepted);
         res.set_content_type(tide::http::mime::HTML);
         res.set_body(include_str!("index.html"));
-        Ok(res) 
+        Ok(res)
     });
     app.at("/tkb.ics").post(|mut req: Request<()>| async move {
         let input = remove_headers(req.body_bytes().await?);
-        let lessons = parse(input).map_err(|e| Error::new(ErrorKind::InvalidData, e))?; 
+        let lessons = parse(input).map_err(|e| Error::new(ErrorKind::InvalidData, e))?;
         let mut res = Response::new(StatusCode::Accepted);
         res.set_content_type(Mime::from_str("text/calendar").unwrap());
         res.set_body(to_ics(lessons));
-        Ok(res) 
+        Ok(res)
     });
     let port = env::var("PORT").unwrap_or_else(|_| "8080".to_string());
     app.listen(format!("0.0.0.0:{}", port)).await?;
     Ok(())
-
 }
 
-
 fn remove_headers(data: Vec<u8>) -> Vec<u8> {
-    let mut start = 0;  
+    let mut start = 0;
     for i in 0..data.len() {
-        if data[i] == 13 && data[i+1]  == 10 && data[i+2] == 13 && data[i+3] == 10{
-            start = i + 4; 
+        if data[i] == 13 && data[i + 1] == 10 && data[i + 2] == 13 && data[i + 3] == 10 {
+            start = i + 4;
             break;
         }
     }

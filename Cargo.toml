@@ -12,3 +12,4 @@ chrono = "0.4.13"
 calamine = "0.16.1"
 tide = "0.11.0"
 async-std = { version = "1.6.0", features = ["attributes"] }
+rand = "0.7.3"

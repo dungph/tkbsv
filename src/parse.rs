@@ -1,47 +1,36 @@
 use crate::Lesson;
 use {
-    std::{
-        io::{
-            Cursor,
-        },
-    },
-    calamine::{
-        Reader,
-        Xls,
-    },
-    chrono::{
-        NaiveDate,
-        Duration,
-    },
+    calamine::{Reader, Xls},
+    chrono::{Duration, NaiveDate},
+    std::io::Cursor,
 };
-
 
 pub fn parse(data: Vec<u8>) -> Result<Vec<Lesson>, String> {
     let data = Cursor::new(data);
-    let mut reader: Xls<Cursor<Vec<u8>>> = Reader::new(data)
-        .map_err(|_| "Cannot open this file")?;
+    let mut reader: Xls<Cursor<Vec<u8>>> =
+        Reader::new(data).map_err(|_| "Cannot open this file")?;
     let sheet_name = reader.sheet_names()[0].clone();
-    let range = reader.worksheet_range(sheet_name.as_str()).ok_or("Error")?
+    let range = reader
+        .worksheet_range(sheet_name.as_str())
+        .ok_or("Error")?
         .map_err(|_| "Error")?;
 
     let rows = range.rows();
-    
-    let focused = rows
-        .filter(|row| {
-            row[0].is_int()
-        });
 
-    
+    let focused = rows.filter(|row| row[0].is_int());
+
     let lessons: Vec<Lesson> = focused
         .map(|row| {
-            (row[5].get_string().unwrap_or("N/A"),
-             row[7].get_string().unwrap_or("N/A"))
-        }).map(|(class, others)| {
-            parse_all(class, others) 
-        }).flatten().collect();
+            (
+                row[5].get_string().unwrap_or("N/A"),
+                row[7].get_string().unwrap_or("N/A"),
+            )
+        })
+        .map(|(class, others)| parse_all(class, others))
+        .flatten()
+        .collect();
 
     Ok(lessons)
-
 }
 
 fn parse_all(class: &str, others: &str) -> Vec<Lesson> {
@@ -60,17 +49,20 @@ fn parse_all(class: &str, others: &str) -> Vec<Lesson> {
         .collect()
 }
 
-fn map_rt_lesson(class: &str,
+fn map_rt_lesson(
+    class: &str,
     range: (NaiveDate, NaiveDate),
-    wd_period_places: Vec<(u32, u8, String)>) 
--> Vec<Lesson> {
+    wd_period_places: Vec<(u32, u8, String)>,
+) -> Vec<Lesson> {
     wd_period_places
         .iter()
         .map(|(wd, p, pl)| (map_wd_to_day(range, *wd), p, pl))
-        .map(|(vec_d, p, pl)| vec_d
-            .iter()
-            .map(|d| (d.clone(), p.clone(), pl.clone()))
-            .collect::<Vec<(NaiveDate, u8, String)>>())
+        .map(|(vec_d, p, pl)| {
+            vec_d
+                .iter()
+                .map(|d| (d.clone(), p.clone(), pl.clone()))
+                .collect::<Vec<(NaiveDate, u8, String)>>()
+        })
         .flatten()
         .map(|(d, p, pl)| {
             let mut l = Lesson::new();
@@ -79,9 +71,9 @@ fn map_rt_lesson(class: &str,
             l.mod_place(&pl);
             l.mod_class(class);
             l
-        }).map(|v| v.clone())
+        })
+        .map(|v| v.clone())
         .collect()
-
 }
 
 fn map_wd_to_day(range: (NaiveDate, NaiveDate), wd: u32) -> Vec<NaiveDate> {
@@ -94,7 +86,6 @@ fn map_wd_to_day(range: (NaiveDate, NaiveDate), wd: u32) -> Vec<NaiveDate> {
     vec
 }
 
-
 fn get_wd_period_place(info: &str) -> Vec<(u32, u8, String)> {
     info.lines()
         .map(|line| line.trim_matches(&['T', 'h', 'ứ', ' ', '\n', '\t'] as &[_]))
@@ -104,11 +95,20 @@ fn get_wd_period_place(info: &str) -> Vec<(u32, u8, String)> {
         .map(|(f, s)| (f.trim(), s.trim()))
         .map(|(f, s)| (f.parse::<u32>().unwrap_or(2), s))
         .map(|(w, s)| (w, s.split("tại").collect::<Vec<&str>>()))
-        .map(|(w, vec)| (w, vec.get(0).unwrap().clone(), vec.get(1).unwrap_or(&"N/A").clone()))
-        .map(|(w, ps, pl)| ps.trim().split(',')
-            .map(|p| p.parse::<u8>().unwrap_or(1))
-            .map(|p| (w, p, pl.to_string()))
-            .collect::<Vec<(u32, u8, String)>>())
+        .map(|(w, vec)| {
+            (
+                w,
+                vec.get(0).unwrap().clone(),
+                vec.get(1).unwrap_or(&"N/A").clone(),
+            )
+        })
+        .map(|(w, ps, pl)| {
+            ps.trim()
+                .split(',')
+                .map(|p| p.parse::<u8>().unwrap_or(1))
+                .map(|p| (w, p, pl.to_string()))
+                .collect::<Vec<(u32, u8, String)>>()
+        })
         .flatten()
         .collect()
 }
@@ -117,10 +117,12 @@ fn split_range(range: &str) -> (NaiveDate, NaiveDate) {
     let v: Vec<NaiveDate> = range
         .split("đến")
         .map(|d| d.trim())
-        .map(|d| d.split('/')
-            .map(|s| s.parse().unwrap_or(0))
-            .collect::<Vec<i32>>()
-        ).map(|dmy| NaiveDate::from_ymd(dmy[2], dmy[1] as u32, dmy[0] as u32))
+        .map(|d| {
+            d.split('/')
+                .map(|s| s.parse().unwrap_or(0))
+                .collect::<Vec<i32>>()
+        })
+        .map(|dmy| NaiveDate::from_ymd(dmy[2], dmy[1] as u32, dmy[0] as u32))
         .collect();
     (v[0], v[1])
 }

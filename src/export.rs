@@ -1,17 +1,9 @@
-
-
 use {
     crate::Lesson,
-    icalendar::{
-        Event,
-        Calendar,
-        Component,
-    },
+    icalendar::{Calendar, Component, Event},
 };
 
-
-
-pub fn to_ics(lessons: Vec<Lesson>) -> Vec<u8>{
+pub fn to_ics(lessons: Vec<Lesson>) -> Vec<u8> {
     let events = lessons
         .iter()
         .map(|lesson| {
@@ -21,12 +13,12 @@ pub fn to_ics(lessons: Vec<Lesson>) -> Vec<u8>{
                 .starts(lesson.begin())
                 .ends(lesson.end())
                 .done()
-        }).collect::<Vec<Event>>();
+        })
+        .collect::<Vec<Event>>();
 
     let mut cal = Calendar::new();
     cal.name("TKBSV");
     cal.extend(events);
-   
+
     format!("{}", cal).into_bytes()
-    
 }

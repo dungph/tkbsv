@@ -1,42 +1,57 @@
 <html>
-        <head>
-            <style>
-                input[type=submit], input[type=file]{
-                      background-color: RGB(238, 49, 40);
-                      border: none;
-                      color: RGB(254, 193, 13);
-                      padding: 32px;
-                      text-decoration: none;
-                      margin: 5px;
-                      cursor: pointer;
-                      width: 100%;
-                      max-width: 400px;
-                      text-align: center
+
+<head>
+        <style>
+                input[type=submit],
+                input[type=file] {
+                        background-color: RGB(238, 49, 40);
+                        border: none;
+                        color: RGB(254, 193, 13);
+                        padding: 32px;
+                        text-decoration: none;
+                        margin: 5px;
+                        cursor: pointer;
+                        width: 100%;
+                        max-width: 400px;
+                        text-align: center
                 }
+
                 footer {
-                        text-align: right;
+                        text-align: center;
                 }
-            </style>
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        </head>
-        <body>
-                <div align="center">
-                        <h1> iCalendar file Generator </h1> 
-                        <h2> (for KMA Schedule) </h2> 
-                        <p> Some parts in this app is `Hard Coded`.</p>
-                        <p> It might causes unknown behaviours </br>and might not works well with automation bots.</p>
-                        <p> Choose the xls file: </p>
-                        <form enctype="multipart/form-data" action="/tkb.ics" method="POST">
-                                <input name="uploaded" type="file" accept=".xls"/><br />
-                                <input type="submit" value="Download" />
-                        </form>
-                </div>
 
-                <footer>
-                        <p> Author: <a href"https://dungph.github.io/"> Dung Ph</a></p>
-                        <p> Email: <a href="mailto:dungph@zoho.com">dungph@zoho.com</a></p>
-                        <p> <a href="https://github.com/dungph/tkbsv/edit/master/src/index.html">Improve this page.</a></p>
-                </footer>
+                a:link {
+                        color: RGB(238, 49, 40);
+                }
 
-        </body>
+                a:visited {
+                        color: RGB(209, 105, 40);
+                }
+        </style>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<body>
+        <div align="center">
+                <h1> iCalendar file Generator </h1>
+                <h2> (for KMA Schedule) </h2>
+                <p> Some parts in this app is `Hard Coded`.</p>
+                <p> It might causes unknown behaviours </br>and might not works well with automation bots.</p>
+                <p> Choose the `.xls` file: </p>
+                <form enctype="multipart/form-data" action="/tkb.ics" method="POST">
+                        <input name="uploaded" type="file" accept=".xls" /><br />
+                        <input type="submit" value="Download" />
+                </form>
+        </div>
+        <hr width="50%">
+        <footer>
+                <p><a href="https://dungph.github.io/"> Dung Ph</a></p>
+                <p><a href="mailto:dungph@zoho.com">dungph@zoho.com</a></p>
+                <p>This site is open source<br><a
+                                href="https://github.com/dungph/tkbsv/edit/master/src/index.html">&gt;&gt;Improve this
+                                page&lt;&lt;</a></p>
+        </footer>
+
+</body>
+
 </html>
