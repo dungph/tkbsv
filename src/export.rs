@@ -10,6 +10,7 @@ pub fn to_ics(lessons: Vec<Lesson>) -> Vec<u8> {
             Event::new()
                 .summary(lesson.class().as_str())
                 .description(format!("Địa điểm: {}", lesson.place()).as_str())
+                .location(&lesson.place())
                 .starts(lesson.begin())
                 .ends(lesson.end())
                 .done()
