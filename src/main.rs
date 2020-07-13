@@ -12,7 +12,7 @@ use {
 #[derive(Debug, Clone)]
 pub struct Lesson {
     date: NaiveDate,
-    period: u8,
+    period: (u8, u8),
     place: String,
     class: String,
 }
@@ -21,14 +21,15 @@ impl Lesson {
     pub fn new() -> Self {
         Lesson {
             date: NaiveDate::from_ymd(2020, 02, 20),
-            period: 1,
+            period: (1, 1),
             place: "Place".to_string(),
             class: "Class".to_string(),
         }
     }
 
+
     fn get_time(&self) -> (u32, u32, u32, u32) {
-        match self.period {
+        let get_each = |period| match period {
             1 => (7, 0, 7, 45),
             2 => (7, 50, 8, 35),
             3 => (8, 40, 9, 25),
@@ -46,14 +47,19 @@ impl Lesson {
             15 => (19, 40, 20, 25),
             16 => (20, 30, 21, 00),
             _ => (0, 0, 0, 0),
-        }
+        };
+        
+        let (bh, bm, _, _) = get_each(self.period.0);
+        let (_, _, eh, em) = get_each(self.period.1);
+        (bh, bm, eh, em)
+
     }
 
     fn offset() -> FixedOffset {
         FixedOffset::east(7 * 3600)
     }
 
-    pub fn mod_period(&mut self, p: u8) {
+    pub fn mod_period(&mut self, p: (u8, u8)) {
         self.period = p;
     }
 

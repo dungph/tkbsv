@@ -52,7 +52,7 @@ fn parse_all(class: &str, others: &str) -> Vec<Lesson> {
 fn map_rt_lesson(
     class: &str,
     range: (NaiveDate, NaiveDate),
-    wd_period_places: Vec<(u32, u8, String)>,
+    wd_period_places: Vec<(u32, (u8, u8), String)>,
 ) -> Vec<Lesson> {
     wd_period_places
         .iter()
@@ -61,7 +61,7 @@ fn map_rt_lesson(
             vec_d
                 .iter()
                 .map(|d| (d.clone(), p.clone(), pl.clone()))
-                .collect::<Vec<(NaiveDate, u8, String)>>()
+                .collect::<Vec<(NaiveDate, (u8, u8), String)>>()
         })
         .flatten()
         .map(|(d, p, pl)| {
@@ -86,7 +86,7 @@ fn map_wd_to_day(range: (NaiveDate, NaiveDate), wd: u32) -> Vec<NaiveDate> {
     vec
 }
 
-fn get_wd_period_place(info: &str) -> Vec<(u32, u8, String)> {
+fn get_wd_period_place(info: &str) -> Vec<(u32, (u8, u8), String)> {
     info.lines()
         .map(|line| line.trim_matches(&['T', 'h', 'ứ', ' ', '\n', '\t'] as &[_]))
         .map(|line| line.trim())
@@ -103,13 +103,13 @@ fn get_wd_period_place(info: &str) -> Vec<(u32, u8, String)> {
             )
         })
         .map(|(w, ps, pl)| {
-            ps.trim()
+            let periods = ps.trim()
                 .split(',')
                 .map(|p| p.parse::<u8>().unwrap_or(1))
-                .map(|p| (w, p, pl.to_string()))
-                .collect::<Vec<(u32, u8, String)>>()
+                .collect::<Vec<u8>>();
+            (w, (*periods.first().unwrap_or(&1), *periods.last().unwrap_or(&16)), pl.to_string())
+
         })
-        .flatten()
         .collect()
 }
 
