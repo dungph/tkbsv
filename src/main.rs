@@ -12,7 +12,15 @@ use utils::{get_period_time, parse_list_uint, parse_weekday, to_ics};
 fn main() {
     task::block_on(async {
         let mut app = tide::new();
-        app.at("/").get(|_| async { Ok("Hello") });
+        app.at("/").get(|_| async { 
+            let mut res = Response::new(StatusCode::Accepted);
+            res.set_content_type(Mime::from_str("text/html").unwrap());
+            res.set_body("go to <a href=\"https://calendar.google.com/calendar/u/0/r/settings/addbyurl\">
+                            https://calendar.google.com/calendar/u/0/r/settings/addbyurl</a><br>Insert:  
+                            http://tkbsv.herokuapp.com/[Your Username]_[Your Password]<br> Example:
+                            http://tkbsv.herokuapp.com/CT040308_123456789");
+            Ok(res)
+        });
         app.at("/:info").get(|req: Request<()>| async move {
             let info: String = req.param("info")?;
             if info.find('_').is_some() {
