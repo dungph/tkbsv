@@ -82,7 +82,6 @@ impl Data {
                     })
                     .collect::<Vec<Data>>()
             })
-            .map(|vec| dbg!(vec))
             .flatten()
             .collect()
     }

@@ -1,5 +1,5 @@
 use crate::Data;
-use chrono::{NaiveTime, Weekday};
+use chrono::{NaiveTime, Weekday, Duration};
 use icalendar::{Calendar, Component, Event};
 
 pub fn parse_list_uint(s: &str) -> Vec<u32> {
@@ -59,8 +59,8 @@ pub fn to_ics(vec: Vec<Data>) -> Vec<u8> {
                 .summary(lesson.class().as_str())
                 .description(format!("Địa điểm: {}", lesson.place()).as_str())
                 .location(&lesson.place().trim())
-                .starts(lesson.begin())
-                .ends(lesson.end())
+                .starts(lesson.begin() - Duration::hours(7))
+                .ends(lesson.end() - Duration::hours(7))
                 .done()
         })
         .collect::<Vec<Event>>();
