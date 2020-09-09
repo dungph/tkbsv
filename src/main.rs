@@ -13,14 +13,18 @@ fn main() {
     task::block_on(async {
         let mut app = tide::new();
         app.at("/").get(|_| async { Ok("Hello") });
-        app.at("/:usr/:pwd").get(|req: Request<()>| async move {
-            let usr: String = req.param("usr")?;
-            let pwd: String = req.param("pwd")?;
-            let content = process(&usr.to_uppercase(), &pwd).await;
-            let mut res = Response::new(StatusCode::Accepted);
-            res.set_content_type(Mime::from_str("text/calendar").unwrap());
-            res.set_body(content.unwrap_or(b"wrong password, your fault".to_vec()));
-            Ok(res)
+        app.at("/:info").get(|req: Request<()>| async move {
+            let info: String = req.param("info")?;
+            if info.find('_').is_some() {
+                let vec = info.split('_').collect::<Vec<&str>>();
+                let content = process(&vec[0].to_uppercase(), &vec[1]).await;
+                let mut res = Response::new(StatusCode::Accepted);
+                res.set_content_type(Mime::from_str("text/calendar").unwrap());
+                res.set_body(content.unwrap_or(b"wrong password, your fault".to_vec()));
+                Ok(res)
+            } else {
+                Ok("Example CT010101_Passwd".into()) 
+            }
         });
         let port = std::env::var("PORT").unwrap_or("8080".to_string());
         app.listen(format!("0.0.0.0:{}", port)).await.unwrap();
