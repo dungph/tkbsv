@@ -19,7 +19,7 @@ fn main() {
             let content = process(&usr.to_uppercase(), &pwd).await;
             let mut res = Response::new(StatusCode::Accepted);
             res.set_content_type(Mime::from_str("text/calendar").unwrap());
-            res.set_body(content.unwrap_or("wrong password, your fault"));
+            res.set_body(content.unwrap_or(b"wrong password, your fault".to_vec()));
             Ok(res)
         });
         let port = std::env::var("PORT").unwrap_or("8080".to_string());
