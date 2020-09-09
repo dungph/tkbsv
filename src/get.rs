@@ -52,8 +52,8 @@ pub async fn get_html(
         .body_form(&form)?
         .await?;
 
-    let cookie1 = login.header("set-cookie").unwrap().to_string();
-    let cookie1 = cookie1.split(';').next().unwrap().to_string();
+    let cookie1 = login.header("set-cookie").ok_or("Error")?.to_string();
+    let cookie1 = cookie1.split(';').next().ok_or("Error")?.to_string();
     let cookie1 = cookie1.replace("[\"", "");
 
     let doc = surf::get(URL)
