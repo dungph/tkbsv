@@ -20,8 +20,8 @@ fn main() {
             res.set_body(include_str!("index.html"));
             Ok(res)
         });
-        app.at("/:info").get(|req: Request<()>| async move {
-            let info: String = req.param("info")?;
+        app.at("/ics/*").get(|req: Request<()>| async move {
+            let info: String = req.url().path().replace("/ics/", "");
             if info.find('_').is_some() {
                 let vec = info.split('_').collect::<Vec<&str>>();
                 let content = process(&vec[0].to_uppercase(), &vec[1]).await;
@@ -34,9 +34,10 @@ fn main() {
                 Ok("Example CT010101_Passwd".into()) 
             }
         });
-        app.at("/json/:usr/:pwd").get(|req: Request<()>| async move {
-            let usr: String = req.param("usr")?;
-            let pwd: String = req.param("pwd")?;
+        app.at("/json/*").get(|req: Request<()>| async move {
+            let path = req.url().path().replace("/json/", "");
+            let (usr, pwd) = path.split_at(path.find('/').unwrap_or(0));
+            let pwd: String = pwd[1..].to_string();
             let vec = process(&usr.to_uppercase(), &pwd).await.unwrap_or(Vec::new());
             
             let doc = vec.iter()
