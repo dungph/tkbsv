@@ -2211,9 +2211,7 @@ version = "0.1.0"
 dependencies = [
  "async-std",
  "chrono",
- "cookie",
  "futures 0.3.5",
- "http-types",
  "icalendar",
  "md5",
  "scraper",

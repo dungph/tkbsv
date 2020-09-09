@@ -1,28 +1,32 @@
+use md5::compute;
 use std::collections::HashMap;
 use std::error::Error;
-use md5::compute;
 
-const URL: &'static str 
-    = "http://qldt.actvn.edu.vn/CMCSoft.IU.Web.Info/Reports/Form/StudentTimeTable.aspx";
+const URL: &'static str =
+    "http://qldt.actvn.edu.vn/CMCSoft.IU.Web.Info/Reports/Form/StudentTimeTable.aspx";
 
-pub async fn get_html(username: &str, passwd: &str) -> Result<String, Box<dyn Error + Send + Sync>> {
-    let mut login_page = surf::get("http://qldt.actvn.edu.vn/CMCSoft.IU.Web.info/Login.aspx").await?;
-    let cookie = login_page.header("set-cookie").unwrap().to_string(); 
+pub async fn get_html(
+    username: &str,
+    passwd: &str,
+) -> Result<String, Box<dyn Error + Send + Sync>> {
+    let mut login_page =
+        surf::get("http://qldt.actvn.edu.vn/CMCSoft.IU.Web.info/Login.aspx").await?;
+    let cookie = login_page.header("set-cookie").unwrap().to_string();
     let cookie = cookie.split(';').next().unwrap().to_string();
     let cookie = cookie.replace("[\"", "");
 
     fn get_state(body: &str) -> (String, String) {
-        let view = body.lines()
+        let view = body
+            .lines()
             .filter(|s| s.find("VIEWSTATE").is_some())
             .map(|s| s.split("value=\"").last().unwrap())
             .map(|s| s.split("\" />").next().unwrap())
             .map(|s| s.to_string())
             .collect::<Vec<String>>();
-        (view[0].clone(), view[1].clone()) 
+        (view[0].clone(), view[1].clone())
     }
     let view = get_state(&login_page.body_string().await.unwrap());
 
-    
     let passwd = format!("{:x}", compute(passwd));
     let mut form = HashMap::new();
     form.insert("txtUserName", username.to_string());
@@ -33,7 +37,10 @@ pub async fn get_html(username: &str, passwd: &str) -> Result<String, Box<dyn Er
     form.insert("__LASTFOCUS", String::new());
     form.insert("__VIEWSTATE", view.0);
     form.insert("__VIEWSTATEGENERATOR", view.1);
-    form.insert("PageHeader1$drpNgonNgu", "E43296C6F24C4410A894F46D57D2D3AB".to_string());
+    form.insert(
+        "PageHeader1$drpNgonNgu",
+        "E43296C6F24C4410A894F46D57D2D3AB".to_string(),
+    );
     form.insert("PageHeader1$hidisNotify", "0".to_string());
     form.insert("PageHeader1$hidValueNotify", ".".to_string());
     form.insert("hidUserId", String::new());
@@ -45,7 +52,7 @@ pub async fn get_html(username: &str, passwd: &str) -> Result<String, Box<dyn Er
         .body_form(&form)?
         .await?;
 
-    let cookie1 = login.header("set-cookie").unwrap().to_string(); 
+    let cookie1 = login.header("set-cookie").unwrap().to_string();
     let cookie1 = cookie1.split(';').next().unwrap().to_string();
     let cookie1 = cookie1.replace("[\"", "");
 
@@ -54,7 +61,6 @@ pub async fn get_html(username: &str, passwd: &str) -> Result<String, Box<dyn Er
         .await?
         .body_string()
         .await?;
- 
 
     Ok(doc)
 }
