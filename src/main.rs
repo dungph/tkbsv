@@ -9,6 +9,8 @@ use std::error::Error;
 use std::str::FromStr;
 use tide::{http::Mime, Request, Response, StatusCode};
 use utils::{get_period_time, parse_list_uint, parse_weekday, to_ics};
+use std::collections::HashMap;
+
 fn main() {
     task::block_on(async {
         let mut app = tide::new();
@@ -70,7 +72,28 @@ impl Data {
     pub fn end(&self) -> NaiveDateTime {
         self.time_end
     }
-    fn parse(class: &str, times: &str, _places: &str) -> Vec<Data> {
+    fn parse(class: &str, times: &str, places: &str) -> Vec<Data> {
+        let mut default = String::new(); 
+        let mut map = HashMap::new();
+        if places.find("(").is_some() {
+            places.split("(")
+                .skip(1)
+                .map(|s| s
+                    .split(")")
+                    .map(|s| s.trim())
+                    .collect::<Vec<&str>>()
+                ).map(|vec| (vec.get(0).unwrap_or(&"1").clone(),
+                            vec.get(1).unwrap_or(&"N/A").clone())
+                ).map(|(i, p)| (parse_list_uint(i), p))
+                .map(|(vec, p)| vec
+                    .iter()
+                    .map(|i| map.insert(i.clone() as usize, p.to_string()))
+                    .all(|_| true)
+                ).all(|_| true);
+        } else {
+            default = places.to_string();
+        }
+
         times
             .split("Từ ")
             .skip(1)
@@ -84,13 +107,14 @@ impl Data {
             .map(|vec| (vec[0].clone(), vec[1].clone()))
             .map(|(r, o)| (Data::parse_range(&r), Data::parse_wd_period(&o)))
             .map(|(r, d)| Data::merge_date_time(r, d))
-            .map(|vec| {
+            .enumerate()
+            .map(|(i, vec)| {
                 vec.iter()
                     .map(|(b, e)| Data {
                         class: class.to_string(),
                         time_begin: *b,
                         time_end: *e,
-                        place: "N/A".to_string(),
+                        place: map.get(&(i+1)).unwrap_or(&default).clone(),
                     })
                     .collect::<Vec<Data>>()
             })
