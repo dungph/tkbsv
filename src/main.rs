@@ -74,7 +74,7 @@ pub struct Data {
 impl Data {
     pub fn to_map(&self) -> HashMap<&'static str, String> {
         let mut map = HashMap::new();
-        map.insert("title", self.class.to_string());
+        map.insert("title", format!("{}\n{}", self.class, self.place));
         map.insert("start", utils::to_utc(self.time_begin).to_rfc3339());
         map.insert("end", utils::to_utc(self.time_end).to_rfc3339());
         map
