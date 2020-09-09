@@ -1,5 +1,5 @@
 use crate::Data;
-use chrono::{NaiveTime, Weekday, DateTime, FixedOffset, offset::Utc};
+use chrono::{NaiveDateTime, NaiveTime, Weekday, DateTime, FixedOffset, offset::Utc};
 use icalendar::{Calendar, Component, Event};
 
 pub fn parse_list_uint(s: &str) -> Vec<u32> {
@@ -51,8 +51,12 @@ pub fn get_period_time(n: u32) -> (NaiveTime, NaiveTime) {
     )
 }
 
-pub fn to_ics(vec: Vec<Data>) -> Vec<u8> {
+pub fn to_utc(t: NaiveDateTime) -> DateTime<Utc> {
     let offset = FixedOffset::east(7*3600);
+    DateTime::from_utc(t - offset, Utc)
+}
+
+pub fn to_ics(vec: Vec<Data>) -> Vec<u8> {
 
     let events = vec
         .iter()
@@ -61,8 +65,8 @@ pub fn to_ics(vec: Vec<Data>) -> Vec<u8> {
                 .summary(lesson.class().as_str())
                 .description(format!("Địa điểm: {}", lesson.place()).as_str())
                 .location(&lesson.place().trim())
-                .starts(DateTime::from_utc(lesson.begin() - offset, Utc))
-                .ends(DateTime::from_utc(lesson.end() - offset, Utc))
+                .starts(to_utc(lesson.begin()))
+                .ends(to_utc(lesson.end()))
                 .done()
         })
         .collect::<Vec<Event>>();

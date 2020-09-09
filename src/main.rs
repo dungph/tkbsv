@@ -16,11 +16,8 @@ fn main() {
         let mut app = tide::new();
         app.at("/").get(|_| async { 
             let mut res = Response::new(StatusCode::Accepted);
-            res.set_content_type(Mime::from_str("text/html").unwrap());
-            res.set_body("go to <a href=\"https://calendar.google.com/calendar/u/0/r/settings/addbyurl\">
-                            https://calendar.google.com/calendar/u/0/r/settings/addbyurl</a><br>Insert:  
-                            http://tkbsv.herokuapp.com/[Your Username]_[Your Password]<br> Example:
-                            http://tkbsv.herokuapp.com/CT040308_123456789");
+            res.set_content_type(tide::http::mime::HTML);
+            res.set_body(include_str!("index.html"));
             Ok(res)
         });
         app.at("/:info").get(|req: Request<()>| async move {
@@ -28,27 +25,42 @@ fn main() {
             if info.find('_').is_some() {
                 let vec = info.split('_').collect::<Vec<&str>>();
                 let content = process(&vec[0].to_uppercase(), &vec[1]).await;
+                let content = to_ics(content.unwrap_or(Vec::new()));
                 let mut res = Response::new(StatusCode::Accepted);
                 res.set_content_type(Mime::from_str("text/calendar").unwrap());
-                res.set_body(content.unwrap_or(b"wrong password, your fault".to_vec()));
+                res.set_body(content);
                 Ok(res)
             } else {
                 Ok("Example CT010101_Passwd".into()) 
             }
+        });
+        app.at("/json/:usr/:pwd").get(|req: Request<()>| async move {
+            let usr: String = req.param("usr")?;
+            let pwd: String = req.param("pwd")?;
+            let vec = process(&usr.to_uppercase(), &pwd).await.unwrap_or(Vec::new());
+            
+            let doc = vec.iter()
+                .map(|dat| dat.to_map())
+                .collect::<Vec<HashMap<&'static str, String>>>();
+
+            let mut res = Response::new(StatusCode::Accepted);
+            res.set_content_type(Mime::from_str("application/json")?);
+            res.set_body(tide::Body::from_json(&doc)?);
+            Ok(res)
         });
         let port = std::env::var("PORT").unwrap_or("8080".to_string());
         app.listen(format!("0.0.0.0:{}", port)).await.unwrap();
     });
 }
 
-async fn process(usr: &str, pwd: &str) -> Result<Vec<u8>, Box<dyn Error + Send + Sync>> {
+async fn process(usr: &str, pwd: &str) 
+    -> Result<Vec<Data>, Box<dyn Error + Send + Sync>> 
+{
     let vec = parse_html(get_html(usr, pwd).await?)?;
-    let vec = vec
-        .iter()
+    Ok(vec.iter()
         .map(|(cl, ts, ps)| Data::parse(cl, ts, ps))
         .flatten()
-        .collect::<Vec<Data>>();
-    Ok(to_ics(vec))
+        .collect())
 }
 
 #[derive(Debug)]
@@ -60,6 +72,13 @@ pub struct Data {
 }
 
 impl Data {
+    pub fn to_map(&self) -> HashMap<&'static str, String> {
+        let mut map = HashMap::new();
+        map.insert("title", self.class.to_string());
+        map.insert("start", utils::to_utc(self.time_begin).to_rfc3339());
+        map.insert("end", utils::to_utc(self.time_end).to_rfc3339());
+        map
+    }
     pub fn class(&self) -> String {
         self.class.to_string()
     }
