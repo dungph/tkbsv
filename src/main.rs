@@ -16,10 +16,10 @@ fn main() {
         app.at("/:usr/:pwd").get(|req: Request<()>| async move {
             let usr: String = req.param("usr")?;
             let pwd: String = req.param("pwd")?;
-            let content = process(&usr, &pwd).await.unwrap();
+            let content = process(&usr.to_uppercase(), &pwd).await;
             let mut res = Response::new(StatusCode::Accepted);
             res.set_content_type(Mime::from_str("text/calendar").unwrap());
-            res.set_body(content);
+            res.set_body(content.unwrap_or("wrong password, your fault"));
             Ok(res)
         });
         let port = std::env::var("PORT").unwrap_or("8080".to_string());
