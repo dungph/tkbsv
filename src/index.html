@@ -3,7 +3,29 @@
     <title>Thời khóa biểu sinh viên</title>
 	<link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.3.2/main.min.css' rel='stylesheet' />
 	<script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.3.2/main.min.js'></script>
-    
+	<style> 
+	input[type=text], input[type=password] {
+		width: 100%;
+		max-width: 400px;
+		padding: 12px 20px;
+		margin: 5px;
+		box-sizing: border-box;
+
+	}
+	input[type=button] {
+			background-color: RGB(238, 49, 40);
+			border: none;
+			color: RGB(254, 193, 13);
+			padding: 12px;
+			text-decoration: none;
+			margin: 5px;
+			cursor: pointer;
+			width: 100%;
+			max-width: 400px;
+			text-align: center
+	}
+	</style>
+
 </head>
 <body>
     <p><b>Đây là ứng dụng hỗ trợ tạo file lịch (ICalendar)<br>
@@ -11,7 +33,7 @@
         Ví dụ: "http://tkbsv.herokuapp.com/ics/ct040308_123456789"<br>
     </b></p>
 
-    <p>Bạn có thể dùng đường dẫn để thêm lịch học vào google calendar:
+	<p>Bạn có thể dùng đường dẫn <b id="link2"></b> để thêm lịch học vào google calendar:<br>
         <a href="https://calendar.google.com/calendar/u/0/r/settings/addbyurl">
             https://calendar.google.com/calendar/u/0/r/settings/addbyurl
         </a>
@@ -21,7 +43,9 @@
 	<br>
     <input type="password" id="pwd" onsubmit="process()" placeholder="Mật Khẩu" >
 	<br>
-    <input type="button" id="submit" onclick="process()" value="Hiển Thị">
+    <input type="button" id="submit" onclick="process()" value="Hiển Thị Thời Khóa Biểu">
+	<br>
+	<input type="button" id=view_link" onclick="view_link()" value="Hiển Thị Link ics">
 	<br>
 	<b><p id="link"></p></b>
 	<br>
@@ -37,9 +61,10 @@
 		});
 	</script>
 	<script>
+		var usr, pwd;
 		function process() {
-        	let usr = document.getElementById("usr").value;
-        	let pwd = document.getElementById("pwd").value;
+        	usr = document.getElementById("usr").value;
+        	pwd = document.getElementById("pwd").value;
 
 			let url = window.location.origin + "/json/" + usr + "/" + pwd;
 			let req = new XMLHttpRequest();
@@ -60,10 +85,15 @@
 									  });
 				calendar.render();
 
-			document.getElementById('link').innerHTML = window.location.origin + "/ics/" + usr + "_" + pwd;
 			};
 			req.send(null);
 		} 
+		
+			function view_link() {
+				document.getElementById('link').innerHTML = window.location.origin + "/ics/" + usr + "_" + pwd;
+				document.getElementById('link2').innerHTML = window.location.origin + "/ics/" + usr + "_" + pwd;
+
+			}
 
     </script>
 
