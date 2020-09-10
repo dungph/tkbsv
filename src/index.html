@@ -63,6 +63,7 @@
 	<script>
 		var usr, pwd;
 		function process() {
+			document.getElementById("calendar").innerHTML = "Đang lấy dữ liệu...";
         	usr = document.getElementById("usr").value;
         	pwd = document.getElementById("pwd").value;
 
@@ -71,6 +72,7 @@
 			req.responseType = 'json';
 			req.open('GET', url, true);
 			req.onload  = function() {
+				document.getElementById("calendar").innerHTML = "";
 				var calendarEl = document.getElementById('calendar');
 				var res = req.response;
 				var calendar = new FullCalendar.Calendar(calendarEl, {
