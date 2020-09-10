@@ -34,11 +34,11 @@
     </b></p>
 
 	<p>Bạn có thể dùng đường dẫn <b id="link2"></b> để thêm lịch học vào google calendar:<br>
-        <a href="https://calendar.google.com/calendar/u/0/r/settings/addbyurl">
+        <a href="https://calendar.google.com/calendar/u/0/r/settings/addbyurl" target="_blank">
             https://calendar.google.com/calendar/u/0/r/settings/addbyurl
         </a>
     </p>
-		
+	<div align="center">	
     <input type="text" id="usr" placeholder="Tài khoản">
 	<br>
     <input type="password" id="pwd" onsubmit="process()" placeholder="Mật Khẩu" >
@@ -48,6 +48,7 @@
 	<input type="button" id=view_link" onclick="view_link()" value="Hiển Thị Link ics">
 	<br>
 	<b><p id="link"></p></b>
+	</div>
 	<br>
 	<div id="calendar"></div>
 
@@ -76,6 +77,7 @@
 				var calendarEl = document.getElementById('calendar');
 				var res = req.response;
 				var calendar = new FullCalendar.Calendar(calendarEl, {
+										height: 'auto',
 									    timeZone: 'local',
 									    initialView: 'timeGridWeek',
 										slotMinTime: '7:00:00',
