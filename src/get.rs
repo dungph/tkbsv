@@ -1,6 +1,7 @@
 use md5::compute;
 use std::collections::HashMap;
 use std::error::Error;
+use surf::Body;
 
 const URL: &'static str =
     "http://qldt.actvn.edu.vn/CMCSoft.IU.Web.Info/Reports/Form/StudentTimeTable.aspx";
@@ -48,8 +49,8 @@ pub async fn get_html(
     form.insert("hidTrainingSystemId", String::new());
 
     let login = surf::post("http://qldt.actvn.edu.vn/CMCSoft.IU.Web.info/Login.aspx")
-        .set_header("Cookie", &*cookie)
-        .body_form(&form)?
+        .header("Cookie", &*cookie)
+        .body(Body::from_form(&form)?)
         .await?;
 
     let cookie1 = login.header("set-cookie").ok_or("Error")?.to_string();
@@ -57,7 +58,7 @@ pub async fn get_html(
     let cookie1 = cookie1.replace("[\"", "");
 
     let doc = surf::get(URL)
-        .set_header("Cookie", format!("{}; {}", cookie, cookie1))
+        .header("Cookie", format!("{}; {}", cookie, cookie1))
         .await?
         .body_string()
         .await?;
