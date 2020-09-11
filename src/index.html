@@ -70,6 +70,8 @@
 		});
 	</script>
 	<script>
+		let res = localStorage.getItem("old_data");
+		render_cal(JSON.parse(res));
 		var usr, pwd;
 		function process() {
 			document.getElementById("calendar").innerHTML = "Đang lấy dữ liệu...";
@@ -81,31 +83,34 @@
 			req.responseType = 'json';
 			req.open('GET', url, true);
 			req.onload  = function() {
-				document.getElementById("calendar").innerHTML = "";
-				var calendarEl = document.getElementById('calendar');
 				var res = req.response;
-				var calendar = new FullCalendar.Calendar(calendarEl, {
-										height: 'auto',
-									    timeZone: 'local',
-									    initialView: 'timeGridWeek',
-										slotMinTime: '7:00:00',
-										slotMaxTime: '22:00:00',
-										allDaySlot: false,
-									    events: res,
-									    editable: true,
-									    selectable: true
-									  });
-				calendar.render();
-
+				localStorage.setItem("old_data",JSON.stringify(res));		
+				render_cal(res);
 			};
 			req.send(null);
 		} 
-		
-			function view_link() {
-				document.getElementById('link').innerHTML = window.location.origin + "/ics/" + usr + "_" + pwd;
-				document.getElementById('link2').innerHTML = window.location.origin + "/ics/" + usr + "_" + pwd;
 
-			}
+		function render_cal(data) {
+			document.getElementById("calendar").innerHTML = "";
+			var calendarEl = document.getElementById('calendar');
+			var calendar = new FullCalendar.Calendar(calendarEl, {
+									height: 'auto',
+								    timeZone: 'local',
+								    initialView: 'timeGridWeek',
+									slotMinTime: '7:00:00',
+									slotMaxTime: '22:00:00',
+									allDaySlot: false,
+								    events: data,
+								    editable: true,
+								    selectable: true
+								  });
+			calendar.render();
+
+
+		}	
+		function view_link() {
+			document.getElementById('link').innerHTML = window.location.origin + "/ics/" + usr + "_" + pwd;
+		}
 
     </script>
 
