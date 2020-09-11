@@ -33,11 +33,15 @@
         Ví dụ: "http://tkbsv.herokuapp.com/ics/ct040308_123456789"<br>
     </b></p>
 
-	<p>Bạn có thể dùng đường dẫn <b id="link2"></b> để thêm lịch học vào google calendar:<br>
+	<p>Bạn có thể dùng đường dẫn đó để thêm lịch học vào google calendar:<br>
         <a href="https://calendar.google.com/calendar/u/0/r/settings/addbyurl" target="_blank">
             https://calendar.google.com/calendar/u/0/r/settings/addbyurl
         </a>
     </p>
+	<p>
+		Dữ liệu sau khi bạn đăng nhập được lưu trên trình duyệt của bạn và hiển thị vào lần sau bạn truy 
+		cập mà không cần đăng nhập.
+	</p>
 	<div align="center">	
     <input type="text" id="usr" placeholder="Tài khoản">
 	<br>
@@ -50,6 +54,7 @@
 	<b><p id="link"></p></b>
 	</div>
 	<br>
+	<p>Thời khóa biểu: <b id="usrname"></b></p>	
 	<div id="calendar"></div>
 
 	<script>
@@ -71,6 +76,7 @@
 	</script>
 	<script>
 		let res = localStorage.getItem("old_data");
+		document.getElementById("usrname").innerHTML= localStorage.getItem("usr");
 		render_cal(JSON.parse(res));
 		var usr, pwd;
 		function process() {
@@ -84,7 +90,8 @@
 			req.open('GET', url, true);
 			req.onload  = function() {
 				var res = req.response;
-				localStorage.setItem("old_data",JSON.stringify(res));		
+				localStorage.setItem("old_data",JSON.stringify(res));	
+				localStorage.setItem("usr", usr);
 				render_cal(res);
 			};
 			req.send(null);
