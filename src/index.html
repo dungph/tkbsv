@@ -115,6 +115,8 @@
 
 		}	
 		function view_link() {
+        	usr = document.getElementById("usr").value;
+        	pwd = document.getElementById("pwd").value;
 			document.getElementById('link').innerHTML = window.location.origin + "/ics/" + usr + "_" + pwd;
 		}
 
