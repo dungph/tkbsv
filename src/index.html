@@ -41,7 +41,7 @@
 	<div align="center">	
     <input type="text" id="usr" placeholder="Tài khoản">
 	<br>
-    <input type="password" id="pwd" onsubmit="process()" placeholder="Mật Khẩu" >
+    <input type="password" id="pwd"  placeholder="Mật Khẩu" >
 	<br>
     <input type="button" id="submit" onclick="process()" value="Hiển Thị Thời Khóa Biểu">
 	<br>
@@ -53,6 +53,14 @@
 	<div id="calendar"></div>
 
 	<script>
+		var input = document.getElementById("usr");
+		input.addEventListener("keyup", function(event) {
+			if (event.keyCode === 13) {
+				event.preventDefault();
+				document.getElementById("submit").click();
+			}
+		});
+	
 		var input = document.getElementById("pwd");
 		input.addEventListener("keyup", function(event) {
 			if (event.keyCode === 13) {
