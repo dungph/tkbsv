@@ -3,8 +3,7 @@ use std::collections::HashMap;
 use std::error::Error;
 use surf::Body;
 
-const URL: &'static str =
-    "http://qldt.actvn.edu.vn/CMCSoft.IU.Web.Info/Reports/Form/StudentTimeTable.aspx";
+const URL: &str = "http://qldt.actvn.edu.vn/CMCSoft.IU.Web.Info/Reports/Form/StudentTimeTable.aspx";
 
 pub async fn get_html(
     username: &str,

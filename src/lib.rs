@@ -1,67 +1,63 @@
 mod get;
 mod utils;
 
-use async_std::task;
 use chrono::{Duration, NaiveDate, NaiveDateTime, NaiveTime, Weekday};
 use get::get_html;
 use scraper::{Html, Selector};
-use std::error::Error;
-use std::str::FromStr;
-use tide::{http::Mime, Request, Response, StatusCode};
-use utils::{get_period_time, parse_list_uint, parse_weekday, to_ics};
 use std::collections::HashMap;
+use utils::{get_period_time, parse_list_uint, parse_weekday, to_ics};
 
-fn main() {
-    task::block_on(async {
-        let mut app = tide::new();
-        app.at("/").get(|_| async { 
-            let mut res = Response::new(StatusCode::Accepted);
-            res.set_content_type(tide::http::mime::HTML);
-            res.set_body(include_str!("index.html"));
-            Ok(res)
-        });
-        app.at("/ics/*").get(|req: Request<()>| async move {
-            let info: String = req.url().path().replace("/ics/", "");
+use worker::*;
+
+#[event(fetch)]
+pub async fn main(req: Request, env: Env) -> Result<Response> {
+    let router = Router::new();
+
+    router
+        .get_async("/", |_, _| async move {
+            Response::from_html(include_str!("index.html"))
+        })
+        .get_async("/ics/*", |req, _ctx| async move {
+            let info: String = req.url()?.path().replace("/ics/", "");
             if info.find('_').is_some() {
                 let vec = info.split('_').collect::<Vec<&str>>();
-                let content = process(&vec[0].to_uppercase(), &vec[1]).await;
-                let content = to_ics(content.unwrap_or(Vec::new()));
-                let mut res = Response::new(StatusCode::Accepted);
-                res.set_content_type(Mime::from_str("text/calendar").unwrap());
-                res.set_body(content);
-                Ok(res)
+                let content = process(&vec[0].to_uppercase(), vec[1]).await;
+                let content = to_ics(content.unwrap_or_default());
+
+                let mut header = Headers::new();
+                header.append("content-type", "text/calendar").unwrap();
+                Response::from_bytes(content).map(|res| res.with_headers(header))
             } else {
-                Ok("Example CT010101_Passwd".into()) 
+                Response::from_bytes(b"Example CT010101_Passwd".to_vec())
             }
-        });
-        app.at("/json/*").get(|req: Request<()>| async move {
-            let path = req.url().path().replace("/json/", "");
+        })
+        .get_async("/json/*", |req, _ctx| async move {
+            let path = req.url()?.path().replace("/json/", "");
             let (usr, pwd) = path.split_at(path.find('/').unwrap_or(0));
             let pwd: String = pwd[1..].to_string();
-            let vec = process(&usr.to_uppercase(), &pwd).await.unwrap_or(Vec::new());
-            
-            let doc = vec.iter()
+            let vec = process(&usr.to_uppercase(), &pwd).await.unwrap_or_default();
+
+            let doc = vec
+                .iter()
                 .map(|dat| dat.to_map())
                 .collect::<Vec<HashMap<&'static str, String>>>();
 
-            let mut res = Response::new(StatusCode::Accepted);
-            res.set_content_type(Mime::from_str("application/json")?);
-            res.set_body(tide::Body::from_json(&doc)?);
-            Ok(res)
-        });
-        let port = std::env::var("PORT").unwrap_or("8080".to_string());
-        app.listen(format!("0.0.0.0:{}", port)).await.unwrap();
-    });
+            Response::from_json(&doc)
+        })
+        .run(req, env)
+        .await
 }
 
-async fn process(usr: &str, pwd: &str) 
-    -> Result<Vec<Data>, Box<dyn Error + Send + Sync>> 
-{
-    let vec = parse_html(get_html(usr, pwd).await?)?;
-    Ok(vec.iter()
-        .map(|(cl, ts, ps)| Data::parse(cl, ts, ps))
-        .flatten()
-        .collect())
+async fn process(usr: &str, pwd: &str) -> anyhow::Result<Vec<Data>> {
+    Ok(parse_html(
+        get_html(usr, pwd)
+            .await
+            .map_err(|_| anyhow::anyhow!("Failed to load page"))?,
+    )?
+    .iter()
+    .map(|(cl, ts, ps)| Data::parse(cl, ts, ps))
+    .flatten()
+    .collect())
 }
 
 #[derive(Debug)]
@@ -93,23 +89,26 @@ impl Data {
         self.time_end
     }
     fn parse(class: &str, times: &str, places: &str) -> Vec<Data> {
-        let mut default = String::new(); 
+        let mut default = String::new();
         let mut map = HashMap::new();
         if places.find("(").is_some() {
-            places.split("(")
+            places
+                .split("(")
                 .skip(1)
-                .map(|s| s
-                    .split(")")
-                    .map(|s| s.trim())
-                    .collect::<Vec<&str>>()
-                ).map(|vec| (vec.get(0).unwrap_or(&"1").clone(),
-                            vec.get(1).unwrap_or(&"N/A").clone())
-                ).map(|(i, p)| (parse_list_uint(i), p))
-                .map(|(vec, p)| vec
-                    .iter()
-                    .map(|i| map.insert(i.clone() as usize, p.to_string()))
-                    .all(|_| true)
-                ).all(|_| true);
+                .map(|s| s.split(")").map(|s| s.trim()).collect::<Vec<&str>>())
+                .map(|vec| {
+                    (
+                        vec.get(0).unwrap_or(&"1").clone(),
+                        vec.get(1).unwrap_or(&"N/A").clone(),
+                    )
+                })
+                .map(|(i, p)| (parse_list_uint(i), p))
+                .map(|(vec, p)| {
+                    vec.iter()
+                        .map(|i| map.insert(i.clone() as usize, p.to_string()))
+                        .all(|_| true)
+                })
+                .all(|_| true);
         } else {
             default = places.to_string();
         }
@@ -134,7 +133,7 @@ impl Data {
                         class: class.to_string(),
                         time_begin: *b,
                         time_end: *e,
-                        place: map.get(&(i+1)).unwrap_or(&default).clone(),
+                        place: map.get(&(i + 1)).unwrap_or(&default).clone(),
                     })
                     .collect::<Vec<Data>>()
             })
@@ -180,7 +179,7 @@ impl Data {
         let vec = range
             .split("đến")
             .map(|s| s.trim())
-            .map(|s| Data::parse_date(s))
+            .map(Data::parse_date)
             .collect::<Vec<NaiveDate>>();
         (vec[0], vec[1])
     }
@@ -191,7 +190,7 @@ impl Data {
     }
 }
 
-fn parse_html(doc: String) -> Result<Vec<(String, String, String)>, Box<dyn Error + Send + Sync>> {
+fn parse_html(doc: String) -> anyhow::Result<Vec<(String, String, String)>> {
     let all = Html::parse_document(&doc);
     let select = Selector::parse(r#"tr[class="cssListItem"]"#).unwrap();
     let select_alt = Selector::parse(r#"tr[class="cssListAlternativeItem"]"#).unwrap();
