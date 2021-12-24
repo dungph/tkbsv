@@ -31,7 +31,23 @@ jobs:
             options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
 
     steps:
+      
+    - uses: Swatinem/rust-cache@v1
+      with:
+        cache-on-failure: true
+    
     - uses: actions/checkout@v2
+    
+    - uses: actions-rs/install@v0.1
+      with:
+        crate: sqlx-cli
+    
+    - name: Migrate
+      run: sqlx migrate run
+    
+    - name: Check sqlx-data
+      run: cargo sqlx prepare --check
+    
     - name: Build
       run: cargo build --verbose
     - name: Run tests
