@@ -1,0 +1,36 @@
+{
+  "db": "PostgreSQL",
+  "9a64ebc10ed953b6a90775bb484048e72cabfb901f22b37f6ff22625979171a6": {
+    "query": "\n            insert into student_schedule(student_code, schedule_data)\n            values($1, $2)\n            on conflict(student_code) do update\n            set schedule_data = student_schedule.schedule_data || $2\n            ",
+    "describe": {
+      "columns": [],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Jsonb"
+        ]
+      },
+      "nullable": []
+    }
+  },
+  "b76824d1ce767075a10a2cdd9aa5f3539e8ce6d64fb52b1c46a76204aa570e3e": {
+    "query": "\n        -- GET ENTITY'S FIELDS\n        select schedule_data from student_schedule\n        where student_code = $1\n        ",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "schedule_data",
+          "type_info": "Jsonb"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      },
+      "nullable": [
+        false
+      ]
+    }
+  }
+}
