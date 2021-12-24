@@ -29,10 +29,11 @@ pub async fn get_date(student_code: &str) -> Result<Vec<Data>, sqlx::Error> {
     .await
     .map(|record| record.schedule_data)
     .map(|data_map| {
-        serde_json::from_value::<HashMap<String, Data>>(data_map)
+        serde_json::from_value::<HashMap<String, Vec<Data>>>(data_map)
             .unwrap()
             .iter()
             .map(|(_k, v)| v.clone())
+            .flatten()
             .collect()
     })
 }
@@ -41,15 +42,18 @@ pub async fn set_data(student_code: &str, data: &Vec<Data>) -> Result<(), sqlx::
     if data.is_empty() {
         Ok(())
     } else {
-        let data = data
+        let key = data
             .iter()
-            .map(|d| {
-                (
-                    format!("{}-{}", d.time_begin, d.time_end),
-                    to_value(d).unwrap(),
-                )
-            })
-            .collect::<Map<String, Value>>();
+            .map(|dat| &dat.class)
+            .filter_map(|class| class.rsplit_once('('))
+            .filter_map(|(n, _)| n.trim().rsplit_once('-'))
+            .find_map(|(s, year)| s.trim_end().rsplit_once('-').map(|r| (r.1, year)))
+            .unwrap();
+        let key = format!("{}-{}", key.0, key.1);
+
+        let mut map = Map::new();
+        map.insert(key, to_value(data).unwrap());
+
         query!(
             r#"
             insert into student_schedule(student_code, schedule_data)
@@ -58,7 +62,7 @@ pub async fn set_data(student_code: &str, data: &Vec<Data>) -> Result<(), sqlx::
             set schedule_data = student_schedule.schedule_data || $2
             "#,
             student_code,
-            Value::Object(data),
+            Value::Object(map),
         )
         .execute(&*DB)
         .await?;

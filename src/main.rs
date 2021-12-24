@@ -1,7 +1,6 @@
 mod database;
 mod get_data;
 
-use async_std::task;
 use chrono::{DateTime, Utc};
 use get_data::process;
 use icalendar::{Calendar, Component, Event};
