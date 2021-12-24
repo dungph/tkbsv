@@ -1,12 +1,13 @@
 mod database;
 mod get_data;
 
+use anyhow::anyhow;
 use chrono::{DateTime, Utc};
 use get_data::process;
 use icalendar::{Calendar, Component, Event};
 use std::collections::HashMap;
 use std::str::FromStr;
-use tide::{http::Mime, Request, Response, StatusCode};
+use tide::{http::Mime, Error, Request, Response, StatusCode};
 
 #[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
 pub struct Data {
@@ -54,35 +55,36 @@ async fn main() -> Result<(), anyhow::Error> {
     });
     app.at("/ics/*").get(|req: Request<()>| async move {
         let info: String = req.url().path().replace("/ics/", "");
-        if info.find('_').is_some() {
-            let (usr, pwd) = info.split_once('_').unwrap();
-            database::set_data(usr, &process(&usr.to_uppercase(), pwd).await?).await?;
+        let (usr, pwd) = info
+            .split_once('_')
+            .ok_or_else(|| Error::new(400, anyhow!("Example CT010101_Passwd")))?;
+        let usr = usr.to_uppercase();
+        database::set_data(&usr, &process(&usr, pwd).await?).await?;
 
-            let events = database::get_date(usr)
-                .await?
-                .iter()
-                .map(Data::to_ics_event)
-                .collect::<Vec<Event>>();
-            let mut cal = Calendar::new();
-            cal.name("TKBSV");
-            cal.extend(events);
+        let events = database::get_data(&usr)
+            .await?
+            .iter()
+            .map(Data::to_ics_event)
+            .collect::<Vec<Event>>();
+        let mut cal = Calendar::new();
+        cal.name("TKBSV");
+        cal.extend(events);
 
-            let mut res = Response::new(StatusCode::Accepted);
-            res.set_content_type(Mime::from_str("text/calendar").unwrap());
-            res.set_body(format!("{}", cal).into_bytes());
-            Ok(res)
-        } else {
-            Ok("Example CT010101_Passwd".into())
-        }
+        let mut res = Response::new(StatusCode::Accepted);
+        res.set_content_type(Mime::from_str("text/calendar").unwrap());
+        res.set_body(format!("{}", cal).into_bytes());
+        Ok(res)
     });
     app.at("/json/*").get(|req: Request<()>| async move {
         let path = req.url().path().replace("/json/", "");
-        let (usr, pwd) = path.split_at(path.find('/').unwrap_or(0));
-        let pwd: String = pwd[1..].to_string();
-        let vec = process(&usr.to_uppercase(), &pwd).await.unwrap_or_default();
-        database::set_data(usr, &vec).await?;
+        let (usr, pwd) = path
+            .split_once('/')
+            .ok_or_else(|| Error::new(400, anyhow!("Example CT010101_Passwd")))?;
 
-        let doc = database::get_date(usr)
+        let usr = usr.to_uppercase();
+        database::set_data(&usr, &process(&usr, pwd).await?).await?;
+
+        let doc = database::get_data(&usr)
             .await?
             .iter()
             .map(|dat| dat.to_json_map())
@@ -93,6 +95,7 @@ async fn main() -> Result<(), anyhow::Error> {
         res.set_body(tide::Body::from_json(&doc)?);
         Ok(res)
     });
+
     let port = std::env::var("PORT").unwrap_or_else(|_| "8080".to_string());
     Ok(app.listen(format!("0.0.0.0:{}", port)).await?)
 }

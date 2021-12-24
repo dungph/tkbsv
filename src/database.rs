@@ -16,7 +16,7 @@ pub async fn migrate() -> Result<(), sqlx::migrate::MigrateError> {
     Ok(())
 }
 
-pub async fn get_date(student_code: &str) -> Result<Vec<Data>, sqlx::Error> {
+pub async fn get_data(student_code: &str) -> Result<Vec<Data>, sqlx::Error> {
     query!(
         r#"
         -- GET ENTITY'S FIELDS
