@@ -1,142 +1,146 @@
 <html>
 <head>
     <title>Thời khóa biểu sinh viên</title>
-	<link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.3.2/main.min.css' rel='stylesheet' />
-	<script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.3.2/main.min.js'></script>
-	<style> 
-	input[type=text], input[type=password] {
-		width: 100%;
-		max-width: 400px;
-		padding: 12px 20px;
-		margin: 5px;
-		box-sizing: border-box;
+    <link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.3.2/main.min.css' rel='stylesheet' />
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.3.2/main.min.js'></script>
+    <style> 
+    input[type=text], input[type=password] {
+        width: 100%;
+        max-width: 400px;
+        padding: 12px 20px;
+        margin: 5px;
+        box-sizing: border-box;
 
-	}
-	input[type=button] {
-			background-color: RGB(238, 49, 40);
-			border: none;
-			color: RGB(254, 193, 13);
-			padding: 12px;
-			text-decoration: none;
-			margin: 5px;
-			cursor: pointer;
-			width: 100%;
-			max-width: 400px;
-			text-align: center
-	}
-	</style>
+    }
+    input[type=button] {
+            background-color: RGB(238, 49, 40);
+            border: none;
+            color: RGB(254, 193, 13);
+            padding: 12px;
+            text-decoration: none;
+            margin: 5px;
+            cursor: pointer;
+            width: 100%;
+            max-width: 400px;
+            text-align: center
+    }
+    </style>
 
 </head>
 <body>
-    <p><b>Đây là ứng dụng hỗ trợ tạo file lịch (ICalendar)<br>
-        Truy cập file này bằng đường dẫn "http://tkbsv.herokuapp.com/ics/[mã sinh viên]_[mật khẩu]" <br>
-        Ví dụ: "http://tkbsv.herokuapp.com/ics/ct040308_123456789"<br>
-    </b></p>
-
-	<p>Bạn có thể dùng đường dẫn đó để thêm lịch học vào google calendar:<br>
+    <h2>Ứng dụng hỗ trợ tạo file lịch (KMA)</h2>
+    <br>
+    <p>  
+        Truy cập file lịch bằng đường dẫn <br>
+        <code>https://tkbsv.herokuapp.com/ics/&lt;mã sinh viên&gt;/&lt;mật khẩu&gt;</code> 
+        <br>
+        <br>
+        Ví dụ: <code>https://tkbsv.herokuapp.com/ics/ct040308/123456789</code>
+        <br>
+        <br>
+        Dùng đường dẫn thêm lịch học vào google calendar:
+        <br>
         <a href="https://calendar.google.com/calendar/u/0/r/settings/addbyurl" target="_blank">
             https://calendar.google.com/calendar/u/0/r/settings/addbyurl
         </a>
+        <br>
     </p>
-	<p>
-		Dữ liệu sau khi bạn đăng nhập được lưu trên trình duyệt của bạn và hiển thị vào lần sau bạn truy 
-		cập mà không cần đăng nhập.
-	</p>
-	<div align="center">	
+
+    <div align="center">    
     <input type="text" id="usr" placeholder="Tài khoản">
-	<br>
+    <br>
     <input type="password" id="pwd"  placeholder="Mật Khẩu" >
-	<br>
+    <br>
     <input type="button" id="submit" onclick="process()" value="Hiển Thị Thời Khóa Biểu">
-	<br>
-	<input type="button" id=view_link" onclick="view_link()" value="Hiển Thị Link ics">
-	<br>
-	<b><p id="link"></p></b>
-	</div>
-	<br>
-	<p>Thời khóa biểu: <b id="usrname"></b></p>	
-	<div id="calendar"></div>
+    <br>
+    <input type="button" id=view_link" onclick="view_link()" value="Hiển Thị Link ics">
+    <br>
+    <b><p id="link"></p></b>
+    </div>
+    <br>
+    <p>Thời khóa biểu: <b id="usrname"></b></p> 
+    <div id="calendar"></div>
 
-	<script>
-		var input = document.getElementById("usr");
-		input.addEventListener("keyup", function(event) {
-			if (event.keyCode === 13) {
-				event.preventDefault();
-				document.getElementById("submit").click();
-			}
-		});
-	
-		var input = document.getElementById("pwd");
-		input.addEventListener("keyup", function(event) {
-			if (event.keyCode === 13) {
-				event.preventDefault();
-				document.getElementById("submit").click();
-			}
-		});
-	</script>
-	<script>
-		let res = localStorage.getItem("old_data");
-		document.getElementById("usrname").innerHTML= localStorage.getItem("usr");
-		render_cal(JSON.parse(res));
-		var usr, pwd;
-		function process() {
-			document.getElementById("calendar").innerHTML = "Đang lấy dữ liệu...";
-        	usr = document.getElementById("usr").value;
-        	pwd = document.getElementById("pwd").value;
+    <script>
+        var input = document.getElementById("usr");
+        input.addEventListener("keyup", function(event) {
+            if (event.keyCode === 13) {
+                event.preventDefault();
+                document.getElementById("submit").click();
+            }
+        });
+    
+        var input = document.getElementById("pwd");
+        input.addEventListener("keyup", function(event) {
+            if (event.keyCode === 13) {
+                event.preventDefault();
+                document.getElementById("submit").click();
+            }
+        });
+    </script>
+    <script>
+        let res = localStorage.getItem("old_data");
+        document.getElementById("usrname").innerHTML= localStorage.getItem("usr");
+        render_cal(JSON.parse(res));
+        var usr, pwd;
+        function process() {
+            document.getElementById("calendar").innerHTML = "Đang lấy dữ liệu...";
+            usr = document.getElementById("usr").value;
+            pwd = document.getElementById("pwd").value;
 
-			let url = window.location.origin + "/json/" + usr + "/" + pwd;
-			let req = new XMLHttpRequest();
-			req.responseType = 'json';
-			req.open('GET', url, true);
-			req.onload  = function() {
-				var res = req.response;
-				localStorage.setItem("old_data",JSON.stringify(res));	
-				localStorage.setItem("usr", usr);
-				render_cal(res);
-			};
-			req.send(null);
-		} 
+            let url = window.location.origin + "/json/" + usr + "/" + pwd;
+            let req = new XMLHttpRequest();
+            req.responseType = 'json';
+            req.open('GET', url, true);
+            req.onload  = function() {
+                var res = req.response;
+                localStorage.setItem("old_data",JSON.stringify(res));   
+                localStorage.setItem("usr", usr);
+                render_cal(res);
+            };
+            req.send(null);
+        } 
 
-		function render_cal(data) {
-			document.getElementById("calendar").innerHTML = "";
-			var calendarEl = document.getElementById('calendar');
-			var calendar = new FullCalendar.Calendar(calendarEl, {
-									height: 'auto',
-								    timeZone: 'local',
-								    initialView: 'timeGridWeek',
-									slotMinTime: '7:00:00',
-									slotMaxTime: '22:00:00',
-									allDaySlot: false,
-								    events: data,
-								    selectable: true
-								  });
-			calendar.render();
+        function render_cal(data) {
+            document.getElementById("calendar").innerHTML = "";
+            var calendarEl = document.getElementById('calendar');
+            var calendar = new FullCalendar.Calendar(calendarEl, {
+                                    height: 'auto',
+                                    timeZone: 'local',
+                                    initialView: 'timeGridWeek',
+                                    slotMinTime: '7:00:00',
+                                    slotMaxTime: '22:00:00',
+                                    allDaySlot: false,
+                                    events: data,
+                                    selectable: true
+                                  });
+            calendar.render();
 
 
-		}	
-		function view_link() {
-        	usr = document.getElementById("usr").value;
-        	pwd = document.getElementById("pwd").value;
-			document.getElementById('link').innerHTML = window.location.origin + "/ics/" + usr + "_" + pwd;
-		}
+        }   
+        function view_link() {
+            usr = document.getElementById("usr").value;
+            pwd = document.getElementById("pwd").value;
+            document.getElementById('link').innerHTML = "https://tkbsv.herokuapp.com/ics/" + usr + "/" + pwd;
+        }
 
     </script>
-	<footer>	
-		<br>
-		<br>	
-		<p align="center">Author: <a href="https://dungph.github.io/">Dung Ph</a></p>
-		<p align="center"><a href="dungph@zoho.com">dungph@zoho.com</a></p>
+    <footer>    
+        <br>
+        <br>    
+        <p align="center">Author: <a href="https://dungph.github.io/">Dung Ph</a></p>
+        <p align="center"><a href="dungph@zoho.com">dungph@zoho.com</a></p>
 
-		<br>
-		<small>This app use get request to send your raw login infomation to heroku server because 
-				I want to make it easier to use api (eg. Import to google calendar). Of course, I 
-				can see your password via heroku route log (I am not able to turn off that) but 
-				the owner of other apps also can do that. Only enter your password in places that 
-				you trust. I guarantee never take your password for any purpose or share it to anybody. 
-				Thank you for using my application!
-		</small>
-	
-	</footer> 
+        <br>
+        <small>This app use get request to send your raw login infomation to heroku server because 
+                I want to make it easier to use api (eg. Import to google calendar). Of course, I 
+                can see your password via heroku route log (I am not able to turn off that) but 
+                the owner of other apps also can do that. Only enter your password in places that 
+                you trust. I guarantee never take your password for any purpose or share it to anybody. 
+                Thank you for using my application!
+        </small>
+    
+    </footer> 
 </body>
 
 </html>

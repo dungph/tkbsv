@@ -56,8 +56,8 @@ async fn main() -> Result<(), anyhow::Error> {
     app.at("/ics/*").get(|req: Request<()>| async move {
         let info: String = req.url().path().replace("/ics/", "");
         let (usr, pwd) = info
-            .split_once('_')
-            .ok_or_else(|| Error::new(400, anyhow!("Example CT010101_Passwd")))?;
+            .split_once(|c| (c == '_') | (c == '/'))
+            .ok_or_else(|| Error::new(400, anyhow!("Example CT010101/Passwd")))?;
         let usr = usr.to_uppercase();
         database::set_data(&usr, &process(&usr, pwd).await?).await?;
 
@@ -79,7 +79,7 @@ async fn main() -> Result<(), anyhow::Error> {
         let path = req.url().path().replace("/json/", "");
         let (usr, pwd) = path
             .split_once('/')
-            .ok_or_else(|| Error::new(400, anyhow!("Example CT010101_Passwd")))?;
+            .ok_or_else(|| Error::new(400, anyhow!("Example CT010101/Passwd")))?;
 
         let usr = usr.to_uppercase();
         database::set_data(&usr, &process(&usr, pwd).await?).await?;
