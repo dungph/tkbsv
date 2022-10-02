@@ -32,8 +32,7 @@ pub async fn get_data(student_code: &str) -> Result<Vec<Data>, sqlx::Error> {
         serde_json::from_value::<HashMap<String, Vec<Data>>>(data_map)
             .unwrap()
             .iter()
-            .map(|(_k, v)| v.clone())
-            .flatten()
+            .flat_map(|(_k, v)| v.clone())
             .collect()
     })
 }

@@ -11,8 +11,7 @@ pub async fn process(usr: &str, pwd: &str) -> Result<Vec<Data>, Error> {
     let vec = parse_html(get_html(usr, pwd).await?)?;
     Ok(vec
         .iter()
-        .map(|(cl, ts, ps)| parse_table_row(cl, ts, ps))
-        .flatten()
+        .flat_map(|(cl, ts, ps)| parse_table_row(cl, ts, ps))
         .collect())
 }
 
@@ -57,13 +56,13 @@ fn parse_table_row(class: &str, times: &str, places: &str) -> Vec<Data> {
         .split("Từ ")
         .skip(1)
         .map(|s| s.split_once(':').unwrap())
-        .map(|(r, o)| (r, o.split_once(')').unwrap().1))
+        .map(|(r, o)| (r, dbg!(o.split_once("Thứ").unwrap().1)))
         .map(|(r, o)| (r.trim(), o.trim()))
         .map(|(r, o)| (parse_date_range(r), parse_weekday_and_period(o)))
         .map(|(range, times)| {
             times
                 .iter()
-                .map(|(wd, (bt, et))| {
+                .flat_map(|(wd, (bt, et))| {
                     let mut vec = Vec::new();
                     let mut date = range.0 + Duration::days(wd.num_days_from_monday() as i64);
                     while date < range.1 {
@@ -72,11 +71,10 @@ fn parse_table_row(class: &str, times: &str, places: &str) -> Vec<Data> {
                     }
                     vec
                 })
-                .flatten()
                 .collect::<Vec<(NaiveDateTime, NaiveDateTime)>>()
         })
         .enumerate()
-        .map(|(i, vec)| {
+        .flat_map(|(i, vec)| {
             vec.iter()
                 .map(|(b, e)| Data {
                     class: class.to_string(),
@@ -86,7 +84,6 @@ fn parse_table_row(class: &str, times: &str, places: &str) -> Vec<Data> {
                 })
                 .collect::<Vec<Data>>()
         })
-        .flatten()
         .collect()
 }
 fn parse_weekday_and_period(all: &str) -> Vec<(Weekday, (NaiveTime, NaiveTime))> {
@@ -99,7 +96,6 @@ fn parse_weekday_and_period(all: &str) -> Vec<(Weekday, (NaiveTime, NaiveTime))>
 
     all.trim()
         .split("Thứ")
-        .skip(1)
         .map(|s| s.split_once("tiết").unwrap())
         .map(|(wd, ps)| (wd.trim(), ps.trim()))
         .map(|(wd, ps)| (parse_weekday(wd), get_ps_str_time(ps)))
@@ -120,15 +116,15 @@ fn parse_date_range(range: &str) -> (NaiveDate, NaiveDate) {
 }
 
 pub fn parse_list_uint(s: &str) -> Vec<u32> {
-    s.trim_matches(|c: char| !c.is_digit(10))
-        .split(|c: char| !c.is_digit(10))
+    s.trim_matches(|c: char| !c.is_ascii_digit())
+        .split(|c: char| !c.is_ascii_digit())
         .filter_map(|s| s.parse::<u32>().ok())
         .collect()
 }
 
 pub fn parse_weekday(s: &str) -> Weekday {
     let d = s
-        .trim_matches(|c: char| !c.is_digit(10))
+        .trim_matches(|c: char| !c.is_ascii_digit())
         .parse::<u8>()
         .unwrap_or(8);
 
